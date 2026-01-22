@@ -23,8 +23,8 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/RackotTrue/Topshina24-Bot-TG-Bitrix24.git
-cd Topshina24-Bot-TG-Bitrix24
+git clone https://github.com/RackotTrue/guarantee-activation-template.git
+cd guarantee-activation-template
 ```
 
 2. Создайте виртуальное окружение:
