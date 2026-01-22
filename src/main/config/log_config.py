@@ -17,7 +17,7 @@ formatter = SafeFormatter('%(asctime)s | %(levelname)s | %(service)s | %(message
 
 
 # Настройка логгера
-logger = logging.getLogger("topshin_bot")
+logger = logging.getLogger("setka_garmoshka_bot")
 logger.handlers = []
 
 

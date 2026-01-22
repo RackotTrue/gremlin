@@ -40,11 +40,11 @@ async def start(message: Message):
     # Создаем inline-клавиатуру с двумя кнопками
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Активировать гарантию 📑", callback_data="activate_guarantee")],
-        [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/topshina24")]
+        [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/setka_garmoshka")]
     ])
 
     await send_message_from_msg(message=message,
-                                text="Это Бот-помощник компании ТОП ШИНА 24! Используя данного бота вы соглашаетесь на обработку персональных данных "
+                                text="Это Бот-помощник компании Сетка Гармошка! Используя данного бота вы соглашаетесь на обработку персональных данных "
                                      "и на получение Email писем с выгодными предложениями.\n\n"
                                      "Для работы выберите команды из списка по кнопке 'Меню'\n\n"
                                      "Мои возможности:\n"

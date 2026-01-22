@@ -137,7 +137,7 @@ async def prepare_to_serial_number(call: CallbackQuery, state: FSMContext):
             
             # Отправляем памятку
             from pathlib import Path
-            memo_path = Path(__file__).resolve().parents[2] / "resources" / "TopShina24_Памятка_гарантия_шины (1) (3).pdf"
+            memo_path = Path(__file__).resolve().parents[2] / "resources" / "Setka_Garmoshka_Памятка_гарантия_шины.pdf"
             if memo_path.exists():
                 await bot.send_document(
                     call.message.chat.id,
@@ -638,7 +638,7 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
             "order_source_wb": "Wildberries",
             "order_source_ym": "Яндекс Маркет",
             "order_source_avito": "Avito",
-            "order_source_retail": "Topshina24.ru"
+            "order_source_retail": "Сетка Гармошка"
         }
 
         order_source = source_map.get(call.data, "Неизвестно")
@@ -664,7 +664,7 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
         # Отправляем сообщение с благодарностью и важной информацией
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
         support_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/topshina24")]
+            [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/setka_garmoshka")]
         ])
         
         await send_message_from_call(
@@ -714,7 +714,7 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
             
             # Отправляем памятку
             from pathlib import Path
-            memo_path = Path(__file__).resolve().parents[2] / "resources" / "TopShina24_Памятка_гарантия_шины (1) (3).pdf"
+            memo_path = Path(__file__).resolve().parents[2] / "resources" / "Setka_Garmoshka_Памятка_гарантия_шины.pdf"
             if memo_path.exists():
                 await bot.send_document(
                     call.message.chat.id,

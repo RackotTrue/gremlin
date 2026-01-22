@@ -5,12 +5,12 @@
 production:
 
   # Настройки телеграмм
-  bot_token: "7927393855:AAGkJzRboNwYj9tuSUjKKnXjp1faW2sjmOU"
+  bot_token: "YOUR_BOT_TOKEN_HERE"
 
   # Настройки почтового ящика
   mail:
-    address: "Bot@topshina24.ru"
-    password: "Jde9034uj80"
+    address: "Bot@yourdomain.ru"
+    password: "YOUR_EMAIL_PASSWORD_HERE"
     smtp_server: "mail.nic.ru"
     smtp_port: 587
     use_tls: false  # false для порта 587 (STARTTLS), true для порта 465 (SMTPS)
@@ -18,28 +18,28 @@ production:
 
   # Настройки Битрикс24
   bitrix24:
-    webhook: "https://topshina24.bitrix24.ru/rest/167/t2y3onhpfjl5u2tk/"
+    webhook: "YOUR_BITRIX24_WEBHOOK_URL_HERE"
     guarantee_mp_category_id: 3
 
   # Настройки БД
   postgres:
     host: localhost
     port: 5433
-    user: topshin24
-    password: topshin24_password_2024
-    database: topshin24_db
+    user: your_db_user
+    password: "YOUR_DB_PASSWORD_HERE"
+    database: your_db_name
 
 
 # Среда разработки
 development:
 
   # Настройки телеграмм
-  bot_token: "7927393855:AAGkJzRboNwYj9tuSUjKKnXjp1faW2sjmOU"
+  bot_token: "YOUR_BOT_TOKEN_HERE"
 
   # Настройки почтового ящика
   mail:
-    address: "Bot@topshina24.ru"
-    password: "Jde9034uj80"
+    address: "Bot@yourdomain.ru"
+    password: "YOUR_EMAIL_PASSWORD_HERE"
     smtp_server: "mail.nic.ru"
     smtp_port: 587
     use_tls: false  # false для порта 587 (STARTTLS), true для порта 465 (SMTPS)
@@ -47,13 +47,13 @@ development:
 
   # Настройки Битрикс24
   bitrix24:
-    webhook: "https://topshina24.bitrix24.ru/rest/167/t2y3onhpfjl5u2tk/"
+    webhook: "YOUR_BITRIX24_WEBHOOK_URL_HERE"
     guarantee_mp_category_id: 3
 
   # Настройки БД
   postgres:
     host: localhost
     port: 5433
-    user: topshin24
-    password: topshin24_password_2024
-    database: topshin24_db
+    user: your_db_user
+    password: "YOUR_DB_PASSWORD_HERE"
+    database: your_db_name

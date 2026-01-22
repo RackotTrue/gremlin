@@ -1,6 +1,6 @@
-# ТОП ШИН 24 Bot
+# Сетка Гармошка Bot
 
-Telegram бот для управления гарантиями и устройствами компании ТОП ШИН 24.
+Telegram бот для управления гарантиями и устройствами компании Сетка Гармошка.
 
 ## Возможности
 
@@ -23,7 +23,7 @@ Telegram бот для управления гарантиями и устрой
 1. Клонируйте репозиторий:
 ```bash
 git clone https://github.com/ВАШ_USERNAME/ВАШ_РЕПОЗИТОРИЙ.git
-cd topshin-bot
+cd setka-garmoshka-bot
 ```
 
 2. Создайте виртуальное окружение:
@@ -43,9 +43,9 @@ pip install -r requirements.txt
 
 5. Настройте базу данных PostgreSQL:
 ```sql
-CREATE DATABASE topshin24_db;
-CREATE USER topshin24 WITH ENCRYPTED PASSWORD 'ваш_пароль';
-GRANT ALL PRIVILEGES ON DATABASE topshin24_db TO topshin24;
+CREATE DATABASE setka_garmoshka_db;
+CREATE USER setka_garmoshka WITH ENCRYPTED PASSWORD 'ваш_пароль';
+GRANT ALL PRIVILEGES ON DATABASE setka_garmoshka_db TO setka_garmoshka;
 ```
 
 6. Запустите бота:
@@ -57,7 +57,7 @@ python3 main.py
 ## Структура проекта
 
 ```
-topshin-bot/
+setka-garmoshka-bot/
 ├── src/
 │   ├── main/
 │   │   ├── config/          # Конфигурация

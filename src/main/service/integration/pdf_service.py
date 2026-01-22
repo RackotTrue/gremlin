@@ -57,9 +57,9 @@ if not FONT_REGISTERED:
 def generate_certificate_pdf(user, device, guarantee) -> Path:
     """
     Генерирует PDF сертификат и возвращает путь к файлу.
-    Файл создаётся во временной директории /tmp/topshin_bot.
+    Файл создаётся во временной директории /tmp/setka_garmoshka_bot.
     """
-    tmp_dir = Path("/tmp/topshin_bot")
+    tmp_dir = Path("/tmp/setka_garmoshka_bot")
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
     filename = f"certificate_{user.chat_id}_{device.id}.pdf"
@@ -177,7 +177,7 @@ def generate_certificate_pdf(user, device, guarantee) -> Path:
     # Контакты поддержки (синим цветом)
     c.setFillColor(blue_color)
     c.setFont(FONT_NAME, 11)
-    support_text = "Контакты поддержки: @topshina24"
+    support_text = "Контакты поддержки: @setka_garmoshka"
     c.drawString(field_x, y, support_text)
 
     c.showPage()

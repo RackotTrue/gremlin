@@ -25,7 +25,7 @@ class OrderSourceEnum(Enum):
     WILDBERRIES = "Wildberries"
     YANDEX_MARKET = "Яндекс Маркет"
     AVITO = "Avito"
-    RETAIL = "Topshina24.ru"
+    RETAIL = "Сетка Гармошка"
 
 
 class ConsentButton(Enum):
