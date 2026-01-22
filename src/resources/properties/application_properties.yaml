@@ -1,0 +1,59 @@
+# /-----------------------------------------------------------------------------/
+# /-----------------------------------------------------------------------------/
+
+# Прод среда
+production:
+
+  # Настройки телеграмм
+  bot_token: "7927393855:AAGkJzRboNwYj9tuSUjKKnXjp1faW2sjmOU"
+
+  # Настройки почтового ящика
+  mail:
+    address: "Bot@topshina24.ru"
+    password: "Jde9034uj80"
+    smtp_server: "mail.nic.ru"
+    smtp_port: 587
+    use_tls: false  # false для порта 587 (STARTTLS), true для порта 465 (SMTPS)
+    timeout: 30    # таймаут в секундах
+
+  # Настройки Битрикс24
+  bitrix24:
+    webhook: "https://topshina24.bitrix24.ru/rest/167/t2y3onhpfjl5u2tk/"
+    guarantee_mp_category_id: 3
+
+  # Настройки БД
+  postgres:
+    host: localhost
+    port: 5433
+    user: topshin24
+    password: topshin24_password_2024
+    database: topshin24_db
+
+
+# Среда разработки
+development:
+
+  # Настройки телеграмм
+  bot_token: "7927393855:AAGkJzRboNwYj9tuSUjKKnXjp1faW2sjmOU"
+
+  # Настройки почтового ящика
+  mail:
+    address: "Bot@topshina24.ru"
+    password: "Jde9034uj80"
+    smtp_server: "mail.nic.ru"
+    smtp_port: 587
+    use_tls: false  # false для порта 587 (STARTTLS), true для порта 465 (SMTPS)
+    timeout: 30    # таймаут в секундах
+
+  # Настройки Битрикс24
+  bitrix24:
+    webhook: "https://topshina24.bitrix24.ru/rest/167/t2y3onhpfjl5u2tk/"
+    guarantee_mp_category_id: 3
+
+  # Настройки БД
+  postgres:
+    host: localhost
+    port: 5433
+    user: topshin24
+    password: topshin24_password_2024
+    database: topshin24_db
