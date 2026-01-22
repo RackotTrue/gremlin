@@ -135,17 +135,16 @@ async def prepare_to_serial_number(call: CallbackQuery, state: FSMContext):
                 caption="Цифровой гарантийный сертификат"
             )
             
-            # Отправляем памятку
-            from pathlib import Path
-            memo_path = Path(__file__).resolve().parents[2] / "resources" / "Setka_Garmoshka_Памятка_гарантия_шины.pdf"
-            if memo_path.exists():
-                await bot.send_document(
-                    call.message.chat.id,
-                    FSInputFile(str(memo_path)),
-                    caption="Памятка по гарантии"
-                )
-            else:
-                logger.warning(f"Файл памятки не найден: {memo_path}", extra={"service": "guarantee_handler"})
+            # Отправляем памятку (опционально - если файл существует)
+            # Раскомментируйте и укажите путь к вашей памятке:
+            # from pathlib import Path
+            # memo_path = Path(__file__).resolve().parents[2] / "resources" / "memo.pdf"
+            # if memo_path.exists():
+            #     await bot.send_document(
+            #         call.message.chat.id,
+            #         FSInputFile(str(memo_path)),
+            #         caption="Памятка по гарантии"
+            #     )
         except Exception as e:
             logger.error(f"Ошибка при отправке PDF: {e}", extra={"service": "guarantee_handler"})
         finally:
@@ -638,7 +637,7 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
             "order_source_wb": "Wildberries",
             "order_source_ym": "Яндекс Маркет",
             "order_source_avito": "Avito",
-            "order_source_retail": "Сетка Гармошка"
+            "order_source_retail": "Розничный магазин"
         }
 
         order_source = source_map.get(call.data, "Неизвестно")
@@ -664,7 +663,7 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
         # Отправляем сообщение с благодарностью и важной информацией
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
         support_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/setka_garmoshka")]
+            [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/support")]
         ])
         
         await send_message_from_call(
@@ -712,17 +711,16 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
                 caption="Цифровой гарантийный сертификат"
             )
             
-            # Отправляем памятку
-            from pathlib import Path
-            memo_path = Path(__file__).resolve().parents[2] / "resources" / "Setka_Garmoshka_Памятка_гарантия_шины.pdf"
-            if memo_path.exists():
-                await bot.send_document(
-                    call.message.chat.id,
-                    FSInputFile(str(memo_path)),
-                    caption="Памятка по гарантии"
-                )
-            else:
-                logger.warning(f"Файл памятки не найден: {memo_path}", extra={"service": "guarantee_handler"})
+            # Отправляем памятку (опционально - если файл существует)
+            # Раскомментируйте и укажите путь к вашей памятке:
+            # from pathlib import Path
+            # memo_path = Path(__file__).resolve().parents[2] / "resources" / "memo.pdf"
+            # if memo_path.exists():
+            #     await bot.send_document(
+            #         call.message.chat.id,
+            #         FSInputFile(str(memo_path)),
+            #         caption="Памятка по гарантии"
+            #     )
         except Exception as e:
             logger.error(f"Ошибка при отправке PDF: {e}", extra={"service": "guarantee_handler"})
         finally:

@@ -150,15 +150,15 @@ async def send_checking_mail(email):
         checking_code = random.randint(1000, 9999)
 
         # Содержание письма
-        subject = "Сетка Гармошка. Проверка Email"
+        subject = "Проверка Email"
         body = ("Здравствуйте! Пожалуйста, подтвердите ваш email.\n\n"
                 f"Ваш проверочный код: {checking_code}\n\n"
-                f"С уважением, команда Сетка Гармошка")
+                f"С уважением, команда поддержки")
 
         # Создание MIME-объекта письма
         msg_object = MIMEText(body, 'plain', 'utf-8')
         msg_object["Subject"] = subject
-        msg_object["From"] = formataddr(("Сетка Гармошка", EMAIL_SENDER_ADDRESS))
+        msg_object["From"] = formataddr(("Гарантийный бот", EMAIL_SENDER_ADDRESS))
         msg_object["To"] = email
 
         # Отправка письма

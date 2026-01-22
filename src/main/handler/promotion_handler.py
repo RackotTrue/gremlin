@@ -23,7 +23,7 @@ async def get_promotion(message: Message):
 
     :param message: Сообщение от пользователя
     """
-    # TODO: Заменить ссылку на сайт Сетка Гармошка
+    # TODO: Заменить ссылку на сайт компании
     text = "Самые актуальные и лучшие предложения ждут Вас! Обращайтесь к нам за подробностями."
 
     await send_message_from_msg(message=message,

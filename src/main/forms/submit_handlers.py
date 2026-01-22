@@ -146,18 +146,19 @@ async def handle_activation_submit(
             if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
         
-        # 7. Отправляем памятку
-        try:
-            memo_path = Path(__file__).resolve().parents[2] / "resources" / "Setka_Garmoshka_Памятка_гарантия_шины.pdf"
-            if memo_path.exists():
-                await bot.send_document(
-                    state.chat_id,
-                    FSInputFile(str(memo_path)),
-                    caption="📋 Памятка по гарантии"
-                )
-                logger.info("Memo PDF sent", extra={"service": "form_engine"})
-        except Exception as e:
-            logger.error(f"Failed to send memo PDF: {e}", extra={"service": "form_engine"})
+        # 7. Отправляем памятку (опционально - если файл существует)
+        # Раскомментируйте и укажите путь к вашей памятке:
+        # try:
+        #     memo_path = Path(__file__).resolve().parents[2] / "resources" / "memo.pdf"
+        #     if memo_path.exists():
+        #         await bot.send_document(
+        #             state.chat_id,
+        #             FSInputFile(str(memo_path)),
+        #             caption="📋 Памятка по гарантии"
+        #         )
+        #         logger.info("Memo PDF sent", extra={"service": "form_engine"})
+        # except Exception as e:
+        #     logger.error(f"Failed to send memo PDF: {e}", extra={"service": "form_engine"})
         
         # Формируем информацию о гарантии для сообщения
         guarantee_response = GuaranteeResponseDTO(guarantee, device_with_guarantees)
