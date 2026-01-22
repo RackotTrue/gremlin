@@ -138,7 +138,8 @@ class FormValidators:
     def _validate_email(cls, value: str, field: FieldConfig) -> ValidationResult:
         """Валидация email"""
         try:
-            valid = validate_email(value)
+            # check_deliverability=False — не проверяем DNS, только формат
+            valid = validate_email(value, check_deliverability=False)
             return ValidationResult.success(valid.normalized)
         except EmailNotValidError:
             error = (field.validation and field.validation.error_message) or cls.DEFAULT_ERRORS["email"]

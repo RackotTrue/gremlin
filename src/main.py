@@ -22,6 +22,8 @@ from main.handler.promotion_handler import router as promotion_router
 from main.handler.device_info_handler import router as device_info_router
 from main.handler.technical_department_handler import router as technical_department_router
 from main.handler.broadcast_handler import router as broadcast_router
+from main.handler.form_guarantee_handler import router as form_guarantee_router  # Form Engine guarantee
+from main.forms.handlers import form_router  # Form Engine router
 from main.service.integration.notifications_service import setup_scheduled_jobs
 from main.utils import *
 
@@ -60,10 +62,13 @@ async def run_bot():
         return True  # Возвращаем True, чтобы показать, что ошибка обработана
 
     # Подключение роутеров
-    dispatcher.include_routers(main_router,
+    # Form Engine router должен быть первым для обработки callback'ов формы
+    dispatcher.include_routers(form_router,
+                               form_guarantee_router,  # Form Engine guarantee handler
+                               main_router,
                                admin_router,
                                broadcast_router,
-                               guarantee_router,
+                               guarantee_router,  # Legacy guarantee handler (совместимость)
                                device_info_router,
                                promotion_router,
                                technical_department_router)

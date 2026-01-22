@@ -1,3 +1,4 @@
+import os
 from aiogram import *
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
@@ -11,6 +12,10 @@ from main.handler.technical_department_handler import technical_support_departme
 from main.middleware.middleware import ChatActionMiddleware
 from main.service.model.user_service import UserService
 from main.utils import send_message_from_msg, send_message_from_call
+
+
+# Флаг использования Form Engine (по умолчанию включен)
+USE_FORM_ENGINE = os.environ.get("USE_FORM_ENGINE", "1") == "1"
 
 
 ###
@@ -56,12 +61,41 @@ async def start(message: Message):
 @router.message(Command('guarantee'))
 async def guarantee_main(message: Message, state: FSMContext):
     """
-    Вызов метода инициализации гарантии
+    Вызов метода инициализации гарантии.
+    
+    Использует Form Engine если USE_FORM_ENGINE=1.
 
     :param state: Состояние
     :param message: Сообщение от пользователя
     """
-    await guarantee(message, state)
+    if USE_FORM_ENGINE:
+        from main.handler.form_guarantee_handler import start_activation_form
+        
+        user = await user_service.create_user(
+            chat_id=message.chat.id,
+            username=message.from_user.username,
+            full_name=message.from_user.full_name
+        )
+        
+        initial_data = {}
+        if user.name:
+            initial_data['name'] = user.name
+        if user.surname:
+            initial_data['surname'] = user.surname
+        if user.phone:
+            initial_data['phone'] = user.phone
+        if user.email:
+            initial_data['email'] = user.email
+        if user.city:
+            initial_data['city'] = user.city
+        
+        await start_activation_form(
+            event=message,
+            state=state,
+            initial_data=initial_data if initial_data else None
+        )
+    else:
+        await guarantee(message, state)
 
 
 @router.message(Command('promotion'))
@@ -112,14 +146,48 @@ async def support_command(message: Message):
 @router.callback_query(F.data == "activate_guarantee")
 async def activate_guarantee_from_button(call: CallbackQuery, state: FSMContext):
     """
-    Обработчик кнопки активации гарантии из главного меню
+    Обработчик кнопки активации гарантии из главного меню.
+    
+    Использует Form Engine если USE_FORM_ENGINE=1 (по умолчанию),
+    иначе использует legacy handler.
 
     :param call: CallbackQuery
     :param state: Состояние
     """
-    from main.handler.guarantee_handler import guarantee
-    await guarantee(call.message, state)
-    await call.answer()
+    if USE_FORM_ENGINE:
+        # Новый путь через Form Engine
+        from main.handler.form_guarantee_handler import start_activation_form
+        
+        # Проверяем/создаём пользователя
+        user = await user_service.create_user(
+            chat_id=call.message.chat.id,
+            username=call.from_user.username,
+            full_name=call.from_user.full_name
+        )
+        
+        # Предзаполняем данные если есть
+        initial_data = {}
+        if user.name:
+            initial_data['name'] = user.name
+        if user.surname:
+            initial_data['surname'] = user.surname
+        if user.phone:
+            initial_data['phone'] = user.phone
+        if user.email:
+            initial_data['email'] = user.email
+        if user.city:
+            initial_data['city'] = user.city
+        
+        await start_activation_form(
+            event=call,
+            state=state,
+            initial_data=initial_data if initial_data else None
+        )
+    else:
+        # Legacy путь
+        from main.handler.guarantee_handler import guarantee
+        await guarantee(call.message, state)
+        await call.answer()
 
 
 @router.callback_query(F.data.startswith('main_action_'))

@@ -11,12 +11,8 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 import os
 
-from aiogram.types import FSInputFile
-
 from main.forms.engine import register_submit_handler
 from main.forms.schemas import FormConfig, FormState, FormSubmitResult
-from main.config.log_config import logger
-from main.config.bot_config import bot
 
 
 @register_submit_handler("activation")
@@ -41,6 +37,10 @@ async def handle_activation_submit(
     :param config: Конфигурация формы
     :return: FormSubmitResult
     """
+    # Lazy imports для избежания циклических зависимостей и инициализации бота при импорте
+    from aiogram.types import FSInputFile
+    from main.config.log_config import logger
+    from main.config.bot_config import bot
     from main.service.model.user_service import UserService
     from main.service.model.device_service import DeviceService
     from main.service.model.guarantee_service import GuaranteeService
