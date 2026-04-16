@@ -18,6 +18,7 @@ production:
 
   # Настройки Битрикс24
   bitrix24:
+    enabled: false  # true = реальные вызовы, false = заглушка
     webhook: "YOUR_BITRIX24_WEBHOOK_URL_HERE"
     guarantee_mp_category_id: 3
 
@@ -29,15 +30,36 @@ production:
     password: "YOUR_DB_PASSWORD_HERE"
     database: your_db_name
 
+  # fal.ai — генерация видео (Kling AI Avatar v2 Standard)
+  fal:
+    api_key: "YOUR_FAL_API_KEY_HERE"
+
+  # OpenAI — TTS озвучка (голос nova)
+  openai:
+    api_key: "YOUR_OPENAI_API_KEY_HERE"
+
 
 # Среда разработки
 development:
 
-  # Настройки телеграмм
-  bot_token: "YOUR_BOT_TOKEN_HERE"
+  # Настройки телеграмм (локально подставьте токен или задайте через env)
+  bot_token: "YOUR_DEV_BOT_TOKEN_HERE"
+
+  # Заглушки (для разработки без внешних сервисов)
+  # bitrix24.enabled: false — не вызывать Bitrix
+  # mail.verification_stub: true — не отправлять письмо, код верификации 0000
+
+  # fal.ai — генерация видео (Kling AI Avatar v2 Standard)
+  fal:
+    api_key: "YOUR_FAL_API_KEY_HERE"
+
+  # OpenAI — TTS озвучка (голос nova)
+  openai:
+    api_key: "YOUR_OPENAI_API_KEY_HERE"
 
   # Настройки почтового ящика
   mail:
+    verification_stub: true  # true = не отправлять письмо, код 0000
     address: "Bot@yourdomain.ru"
     password: "YOUR_EMAIL_PASSWORD_HERE"
     smtp_server: "mail.nic.ru"
@@ -47,13 +69,14 @@ development:
 
   # Настройки Битрикс24
   bitrix24:
+    enabled: false  # true = реальные вызовы, false = заглушка
     webhook: "YOUR_BITRIX24_WEBHOOK_URL_HERE"
     guarantee_mp_category_id: 3
 
   # Настройки БД
   postgres:
     host: localhost
-    port: 5433
-    user: your_db_user
-    password: "YOUR_DB_PASSWORD_HERE"
-    database: your_db_name
+    port: 5632
+    user: postgres
+    password: "YOUR_DEV_DB_PASSWORD_HERE"
+    database: postgres

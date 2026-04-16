@@ -9,7 +9,12 @@ Renderer — генерация сообщений и клавиатур из к
 """
 
 from typing import Optional, List, Dict, Any
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+)
 
 from main.forms.schemas import (
     FormConfig, FormState, FieldConfig, FieldType,
@@ -207,6 +212,10 @@ class FormRenderer:
         if step.type == FieldType.CONSENT:
             return "✅ Да" if value else "❌ Нет"
         
+        if step.type == FieldType.SELECT:
+            if step.options_map and str(value) in step.options_map:
+                return step.options_map[str(value)]
+        
         if isinstance(value, bool):
             return "Да" if value else "Нет"
         
@@ -295,6 +304,19 @@ class FormRenderer:
     def render_validation_error(self, error: str) -> str:
         """Форматирует сообщение об ошибке валидации"""
         return f"❌ {error}\n\nПожалуйста, попробуйте еще раз."
+
+    def render_phone_reply_keyboard(self, state: FormState) -> ReplyKeyboardMarkup:
+        """Клавиатура шага телефона: «Поделиться контактом» + навигация."""
+        buttons = self.config.buttons
+        rows = [
+            [KeyboardButton(text="Поделиться номером телефона", request_contact=True)],
+        ]
+        nav_row = []
+        if state.current_step_index > 0:
+            nav_row.append(KeyboardButton(text=buttons.back))
+        nav_row.append(KeyboardButton(text=buttons.cancel))
+        rows.append(nav_row)
+        return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True, one_time_keyboard=False)
 
 
 def create_renderer(config: FormConfig) -> FormRenderer:

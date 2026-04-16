@@ -1,0 +1,19 @@
+# Конфиг героев для видео-открыток.
+# image_url — публичный URL картинки, загруженной в fal.storage.
+#
+# Дополнительные изображения (загружены в fal.storage 2026-04-16):
+#   1 - 312092267.png  -> https://v3b.fal.media/files/b/0a967ecd/Jo3M0iCV0NR1KeSxomLIX_1%20-%20312092267.png
+#   2 - 58452308.png   -> https://v3b.fal.media/files/b/0a967ecd/jGCwDHySnXsgvn1ThYmTz_2%20-%2058452308.png
+#   3 - 424774838.png  -> https://v3b.fal.media/files/b/0a967ece/axLnDq-c4lt4ZDuF6bz03_3%20-%20424774838.png
+#   4 - 336435693.png  -> https://v3b.fal.media/files/b/0a967ece/qOKXVwqhE146u9hK4_vj3_4%20-%20336435693.png
+#   5 - 758048932.png  -> https://v3b.fal.media/files/b/0a967ecf/Olf3p3d-z99eqivyhG3KL_5%20-%20758048932.png
+#   6 - 492884902.png  -> https://v3b.fal.media/files/b/0a967ecf/67Wvh0uwma6HnnDixR5GP_6%20-%20492884902%20.png
+#   7 - 349664142.png  -> https://v3b.fal.media/files/b/0a967ed0/Gu47Ilxk52CuO-pah9GjE_7%20-%20349664142%20.png
+
+heroes:
+  gremlin:
+    id: gremlin
+    name: "Гремлин"
+    display_name: "Гремлин 👾"
+    image_url: "https://v3b.fal.media/files/b/0a967ed1/K8tewXG6yGrnNVIl9duSn_mascot_gremlin.png"
+    description: "Маскот-гремлин, который поздравляет ребёнка"

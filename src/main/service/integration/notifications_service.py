@@ -286,10 +286,59 @@ async def send_season_autumn_notifications():
         )
 
 
+async def poll_video_jobs_and_send():
+    """
+    Опрашивает fal.ai по pending video jobs, при готовности отправляет видео пользователю.
+    """
+    from main.repository.video_job_repository import VideoJobRepository
+    from main.service.integration.fal_video_service import get_task_status
+
+    repo = VideoJobRepository()
+    try:
+        jobs = await repo.get_all_pending()
+        for job in jobs:
+            if not job.fal_request_id:
+                continue
+            status, result_url = await get_task_status(job.fal_request_id)
+            if status == "succeed" and result_url:
+                chat_id = job.lead.user_chat_id if job.lead else None
+                if chat_id:
+                    try:
+                        await bot.send_video(
+                            chat_id=chat_id,
+                            video=result_url,
+                            caption="🎬 Ваша видео-открытка готова!",
+                        )
+                        job.status = "done"
+                        job.result_url = result_url
+                        await repo.update(job)
+                        logger.info(f"Video sent for job {job.id} to {chat_id}", extra={"service": "video_worker"})
+                    except Exception as e:
+                        logger.error(f"Failed to send video to {chat_id}: {e}", extra={"service": "video_worker"})
+            elif status == "failed":
+                job.status = "failed"
+                await repo.update(job)
+                chat_id = job.lead.user_chat_id if job.lead else None
+                if chat_id:
+                    try:
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text="К сожалению, генерация видео не удалась. Попробуйте создать новую открытку позже.",
+                        )
+                    except Exception:
+                        pass
+                logger.warning(f"Video job {job.id} failed", extra={"service": "video_worker"})
+    except Exception as e:
+        logger.error(f"Video jobs poll error: {e}", extra={"service": "video_worker"})
+
+
 def setup_scheduled_jobs():
     """
     Регистрирует задачи в APScheduler.
     """
+    # Опрос готовности видео каждые 2 минуты
+    scheduler.add_job(poll_video_jobs_and_send, "interval", minutes=2)
+
     # Ежедневные задачи (например, в 11:00 по серверному времени)
     scheduler.add_job(send_day3_content_notifications, "cron", hour=11, minute=0)
     scheduler.add_job(send_day15_review_notifications, "cron", hour=11, minute=5)

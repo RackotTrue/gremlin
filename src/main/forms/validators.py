@@ -125,8 +125,11 @@ class FormValidators:
         
         # Проверяем формат +7 и 10 цифр после
         if not re.fullmatch(r'^\+7\d{10}$', normalized):
+            # 79161234567 (из Telegram contact и т.п.)
+            if re.fullmatch(r'^7\d{10}$', normalized):
+                normalized = '+' + normalized
             # Пробуем преобразовать 8... в +7...
-            if re.fullmatch(r'^8\d{10}$', normalized):
+            elif re.fullmatch(r'^8\d{10}$', normalized):
                 normalized = '+7' + normalized[1:]
             else:
                 error = (field.validation and field.validation.error_message) or cls.DEFAULT_ERRORS["phone"]

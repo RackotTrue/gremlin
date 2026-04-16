@@ -6,3 +6,5 @@ __pycache__/
 *.iml
 .DS_Store
 .env
+bot.log
+drive-download*/

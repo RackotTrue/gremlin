@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
+from main.config.dynaconf_config import config_setting
 from main.enum.guarantee_enum import GuaranteeTypeEnum, GUARANTEE_PERIOD_LENGTH_STANDARD
 from main.exception.exception import NotFoundGuaranteeException
 from main.model.device_base import DeviceBase
@@ -63,6 +64,8 @@ class GuaranteeService:
         :param guarantee_dto: ДТО гарантийного плана для создания в Битрикс24
         :return: id Сделки из системы Битрикс24
         """
+        if not getattr(getattr(config_setting, "BITRIX24", None), "ENABLED", True):
+            return None  # Заглушка: Bitrix отключён
 
         # Проверяем, есть ли контакт в системе Битрикс24.
 

@@ -9,6 +9,7 @@ aiogram Handlers для Form Engine.
 
 from typing import Optional, Dict, Any, Callable, Awaitable
 from aiogram import Router, F
+from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -96,6 +97,17 @@ async def stop_form(user_id: int, state: FSMContext):
     """
     clear_active_engine(user_id)
     await state.clear()
+
+
+# Специальная обработка /start во время заполнения формы:
+# сбрасываем форму и передаём управление основному /start-хендлеру.
+@form_router.message(FormEngineState.filling, Command("start"))
+async def handle_start_during_form(message: Message, state: FSMContext):
+    """Если пользователь вводит /start во время формы — сбросить форму и показать главное меню."""
+    from main.handler.main_handler import start as main_start  # ленивый импорт, чтобы избежать циклов
+
+    await stop_form(message.from_user.id, state)
+    await main_start(message)
 
 
 # Handler для текстовых сообщений в состоянии заполнения формы

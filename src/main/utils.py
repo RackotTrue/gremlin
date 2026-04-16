@@ -24,11 +24,10 @@ async def set_bot_commands(bot: Bot):
     """
 
     commands = [
-        BotCommand(command="guarantee", description=MainMenuButtonEnum.GUARANTEE.value),
+        BotCommand(command="start", description="Сделать видео-открытку / Главное меню"),
+        BotCommand(command="video", description="Видео-открытка для ребёнка"),
         BotCommand(command="device_info", description=MainMenuButtonEnum.DEVICE_INFO.value),
-        BotCommand(command="technical_support_department", description=MainMenuButtonEnum.TECHNICAL_SUPPORT_DEPARTMENT.value),
         BotCommand(command="promotion", description=MainMenuButtonEnum.PROMOTION.value),
-        BotCommand(command="support", description="Техподдержка - @RackotXO"),
     ]
     await bot.set_my_commands(commands)
 

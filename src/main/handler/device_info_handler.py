@@ -46,7 +46,7 @@ async def devices_info(message: Message):
 
     except NotFoundDeviceException:
         await send_message_from_msg(message=message,
-                                    text="Данных об устройствах не обнаружено. Зарегистрируйте устройство через команду 'Активация гарантии' (/guarantee)")
+                                    text="Данных об устройствах не обнаружено.")
 
 
 @router.callback_query(ChoiceDeviceCall.filter())

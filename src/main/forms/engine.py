@@ -15,7 +15,7 @@ import yaml
 import json
 from pathlib import Path
 from typing import Optional, Dict, Any, Callable, Awaitable, Union
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 
 from main.forms.schemas import (
@@ -187,6 +187,105 @@ class FormEngine:
         # Показываем первый шаг
         await self._show_current_step(event, state)
     
+    async def _send_step_with_inline(
+        self,
+        event: Union[Message, CallbackQuery],
+        text: str,
+        inline_keyboard: InlineKeyboardMarkup,
+    ) -> None:
+        """Текст шага и inline-кнопки. Если есть inline — шлём сразу с ними.
+        ReplyKeyboardRemove отправляем только отдельным невидимым сообщением, если нужно."""
+        reply_markup = inline_keyboard if inline_keyboard.inline_keyboard else ReplyKeyboardRemove()
+        if isinstance(event, Message):
+            await event.answer(text, parse_mode="Markdown", reply_markup=reply_markup)
+        else:
+            await event.message.answer(text, parse_mode="Markdown", reply_markup=reply_markup)
+            await event.answer()
+    
+    async def _go_back_from_message(
+        self,
+        message: Message,
+        state: FormState,
+        storage: FormStateStorage,
+    ) -> None:
+        if state.current_step_index > 0:
+            state.current_step_index -= 1
+            if state.current_step_index < len(self.config.steps):
+                step = self.config.steps[state.current_step_index]
+                if step.type == FieldType.EMAIL_VERIFICATION:
+                    state.current_step_index -= 1
+            await storage.save_state(state)
+        await self._show_current_step(message, state)
+    
+    async def _cancel_form_from_message(
+        self,
+        message: Message,
+        state: FormState,
+        storage: FormStateStorage,
+        fsm_context: FSMContext,
+    ) -> None:
+        state.is_cancelled = True
+        await storage.save_state(state)
+        await message.answer(self.renderer.render_cancel_text(), reply_markup=ReplyKeyboardRemove())
+        await storage.reset_state(state.user_id, state.form_id)
+        from main.forms.handlers import stop_form
+        await stop_form(message.from_user.id, fsm_context)
+    
+    async def _process_phone_input(
+        self,
+        message: Message,
+        fsm_context: FSMContext,
+        state: FormState,
+        storage: FormStateStorage,
+        current_step: FieldConfig,
+    ) -> bool:
+        buttons = self.config.buttons
+        phone_kb = self.renderer.render_phone_reply_keyboard(state)
+        
+        if message.contact:
+            if message.contact.user_id != message.from_user.id:
+                await message.answer(
+                    "Пожалуйста, отправьте *свой* номер через кнопку ниже.",
+                    parse_mode="Markdown",
+                    reply_markup=phone_kb,
+                )
+                return True
+            raw = message.contact.phone_number or ""
+            validator = get_validator_for_field(current_step)
+            result = validator(raw)
+            if not result.is_valid:
+                await message.answer(
+                    self.renderer.render_validation_error(result.error),
+                    parse_mode="Markdown",
+                    reply_markup=phone_kb,
+                )
+                return True
+            state.collected_data[current_step.id] = result.value
+            state.current_step_index += 1
+            await storage.save_state(state)
+            await self._show_current_step(message, state)
+            return True
+        
+        if message.text == buttons.cancel:
+            await self._cancel_form_from_message(message, state, storage, fsm_context)
+            return True
+        if message.text == buttons.back and state.current_step_index > 0:
+            await self._go_back_from_message(message, state, storage)
+            return True
+        if message.text:
+            await message.answer(
+                "Нажмите кнопку *«Поделиться номером телефона»*, чтобы отправить номер.",
+                parse_mode="Markdown",
+                reply_markup=phone_kb,
+            )
+            return True
+        await message.answer(
+            "Нажмите кнопку *«Поделиться номером телефона»*.",
+            parse_mode="Markdown",
+            reply_markup=phone_kb,
+        )
+        return True
+    
     async def process_input(
         self, 
         message: Message,
@@ -211,19 +310,29 @@ class FormEngine:
             return True
         
         current_step = self.config.steps[state.current_step_index]
+        
+        if current_step.type == FieldType.PHONE:
+            return await self._process_phone_input(
+                message, fsm_context, state, storage, current_step
+            )
+        
         value = message.text
+        if value is None:
+            await message.answer("Пожалуйста, отправьте текстовое сообщение.")
+            return True
         
         self._log_debug(f"Processing input for step '{current_step.id}': {value}")
         
         # Для select и consent — текстовый ввод не обрабатываем
         if current_step.type in (FieldType.SELECT, FieldType.CONSENT):
-            await message.answer(
+            await self._send_step_with_inline(
+                message,
                 "Пожалуйста, используйте кнопки для выбора.",
-                reply_markup=self.renderer.render_step_keyboard(
-                    current_step, state, 
+                self.renderer.render_step_keyboard(
+                    current_step, state,
                     show_back=state.current_step_index > 0,
                     show_skip=not current_step.required
-                )
+                ),
             )
             return True
         
@@ -232,15 +341,14 @@ class FormEngine:
         result = validator(value)
         
         if not result.is_valid:
-            # Показываем ошибку и просим повторить
-            await message.answer(
+            await self._send_step_with_inline(
+                message,
                 self.renderer.render_validation_error(result.error),
-                parse_mode="Markdown",
-                reply_markup=self.renderer.render_step_keyboard(
+                self.renderer.render_step_keyboard(
                     current_step, state,
                     show_back=state.current_step_index > 0,
                     show_skip=not current_step.required
-                )
+                ),
             )
             return True
         
@@ -266,13 +374,13 @@ class FormEngine:
         # Специальная обработка для верификации email
         if current_step.type == FieldType.EMAIL_VERIFICATION:
             if not self._verify_code(value, state.verification_code):
-                await message.answer(
+                await self._send_step_with_inline(
+                    message,
                     self.renderer.render_validation_error("Неверный код. Попробуйте еще раз."),
-                    parse_mode="Markdown",
-                    reply_markup=self.renderer.render_step_keyboard(
+                    self.renderer.render_step_keyboard(
                         current_step, state,
                         show_back=state.current_step_index > 0
-                    )
+                    ),
                 )
                 return True
             # Код верный — очищаем временные данные
@@ -373,17 +481,22 @@ class FormEngine:
         current_step = self.config.steps[state.current_step_index]
         
         text = self.renderer.render_step_text(current_step, state)
+        
+        if current_step.type == FieldType.PHONE:
+            phone_kb = self.renderer.render_phone_reply_keyboard(state)
+            if isinstance(event, Message):
+                await event.answer(text, parse_mode="Markdown", reply_markup=phone_kb)
+            else:
+                await event.message.answer(text, parse_mode="Markdown", reply_markup=phone_kb)
+                await event.answer()
+            return
+        
         keyboard = self.renderer.render_step_keyboard(
             current_step, state,
             show_back=state.current_step_index > 0,
             show_skip=not current_step.required
         )
-        
-        if isinstance(event, Message):
-            await event.answer(text, parse_mode="Markdown", reply_markup=keyboard)
-        else:
-            await event.message.answer(text, parse_mode="Markdown", reply_markup=keyboard)
-            await event.answer()
+        await self._send_step_with_inline(event, text, keyboard)
     
     async def _show_review(
         self, 
@@ -393,12 +506,7 @@ class FormEngine:
         """Показать экран review"""
         text = self.renderer.render_review_text(state)
         keyboard = self.renderer.render_review_keyboard(state)
-        
-        if isinstance(event, Message):
-            await event.answer(text, parse_mode="Markdown", reply_markup=keyboard)
-        else:
-            await event.message.answer(text, parse_mode="Markdown", reply_markup=keyboard)
-            await event.answer()
+        await self._send_step_with_inline(event, text, keyboard)
     
     async def _go_back(
         self, 
@@ -430,7 +538,10 @@ class FormEngine:
         state.is_cancelled = True
         await storage.save_state(state)
         
-        await callback.message.answer(self.renderer.render_cancel_text())
+        await callback.message.answer(
+            self.renderer.render_cancel_text(),
+            reply_markup=ReplyKeyboardRemove(),
+        )
         await callback.answer()
         
         # Очищаем состояние
@@ -477,17 +588,12 @@ class FormEngine:
         
         current_step = self.config.steps[state.current_step_index]
         
-        # Получаем отображаемое значение
-        if current_step.options_map and value in current_step.options_map:
-            display_value = current_step.options_map[value]
-        else:
-            display_value = value
-        
-        state.collected_data[current_step.id] = display_value
+        # Сохраняем техническое значение (ключ/ID), а не отображаемое имя
+        state.collected_data[current_step.id] = value
         state.current_step_index += 1
         await storage.save_state(state)
         
-        self._log_debug(f"Select '{current_step.id}' = {display_value}")
+        self._log_debug(f"Select '{current_step.id}' = {value}")
         
         await self._show_current_step(callback, state)
     
@@ -553,17 +659,23 @@ class FormEngine:
                     await storage.save_state(state)
                     
                     message = result.message or self.renderer.render_success_text(state)
-                    await callback.message.answer(message, parse_mode="Markdown")
+                    await callback.message.answer(
+                        message,
+                        parse_mode="Markdown",
+                        reply_markup=ReplyKeyboardRemove(),
+                    )
                 else:
                     await callback.message.answer(
                         self.renderer.render_fail_text(result.error),
-                        parse_mode="Markdown"
+                        parse_mode="Markdown",
+                        reply_markup=ReplyKeyboardRemove(),
                     )
             except Exception as e:
                 logger.error(f"Error in submit handler: {e}")
                 await callback.message.answer(
                     self.renderer.render_fail_text(str(e)),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
+                    reply_markup=ReplyKeyboardRemove(),
                 )
         else:
             # Нет handler — просто помечаем как завершённую
@@ -571,7 +683,8 @@ class FormEngine:
             await storage.save_state(state)
             await callback.message.answer(
                 self.renderer.render_success_text(state),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
+                reply_markup=ReplyKeyboardRemove(),
             )
         
         await callback.answer()
@@ -580,17 +693,22 @@ class FormEngine:
         """
         Отправить код верификации на email.
         Возвращает сгенерированный код.
+        Если mail.verification_stub=true — не отправляет письмо, возвращает 0000.
         """
+        from main.config.dynaconf_config import config_setting
         from main.service.integration.mail_service import send_checking_mail
-        
+
+        if getattr(getattr(config_setting, "MAIL", None), "VERIFICATION_STUB", False):
+            self._log_debug("Email verification stub: returning 0000 (no email sent)")
+            return "0000"
+
         try:
             code = await send_checking_mail(email)
             self._log_debug(f"Sent verification code to {email}")
             return str(code)
         except Exception as e:
             logger.error(f"Failed to send verification code: {e}")
-            # Возвращаем заглушку если не удалось отправить
-            return "0000"
+            return "0000"  # Заглушка при ошибке отправки
     
     def _verify_code(self, input_code: str, expected_code: Optional[str]) -> bool:
         """Проверить код верификации"""

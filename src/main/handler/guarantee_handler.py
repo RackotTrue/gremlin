@@ -661,11 +661,6 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
         await state.clear()
 
         # Отправляем сообщение с благодарностью и важной информацией
-        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-        support_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Обратиться в техническую поддержку 🔧", url="https://t.me/support")]
-        ])
-        
         await send_message_from_call(
             call=call,
             text=("Благодарим Вас за покупку и регистрацию гарантии, высылаем вам памятку с основными правилами.\n\n"
@@ -673,7 +668,6 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
                   "(например, шина не балансируется или имеет ярко выраженное отклонение от оси вращения), "
                   "рекомендуем не эксплуатировать такую шину и сразу обратиться к нам в этом чате — "
                   "это упростит и ускорит процедуру возврата денежных средств."),
-            keyboard=support_keyboard
         )
 
         # Автоматически создаем стандартную гарантию без выбора типа
