@@ -179,7 +179,17 @@ class FormEngine:
         # Предзаполняем данные если есть
         if initial_data:
             state.collected_data.update(initial_data)
-        
+
+            # Пропускаем шаги, значение которых уже передано в initial_data.
+            # Не пропускаем email (там особая логика с кодом верификации).
+            while state.current_step_index < len(self.config.steps):
+                step = self.config.steps[state.current_step_index]
+                if step.type in (FieldType.EMAIL, FieldType.EMAIL_VERIFICATION):
+                    break
+                if step.id not in state.collected_data:
+                    break
+                state.current_step_index += 1
+
         await storage.save_state(state)
         
         self._log_debug(f"Started form '{self.config.form_id}' for user {user_id}")

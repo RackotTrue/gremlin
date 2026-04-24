@@ -38,10 +38,45 @@ async def start_video_form_button(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-async def _start_video_form(event: Message | CallbackQuery, state: FSMContext, username: str = None, full_name: str = None):
+@router.callback_query(F.data.startswith("start_video_greeting_for:"))
+async def start_video_form_for_product(call: CallbackQuery, state: FSMContext):
+    """
+    Запуск формы видео-открытки с уже выбранным героем (товаром).
+
+    Callback: `start_video_greeting_for:<hero_id>`, где hero_id совпадает с
+    product_id из ProductEnum и ключом героя в heroes.yml.
+    Форма пропускает шаг выбора героя, т.к. он уже предзаполнен.
+    """
+    hero_id = call.data.split(":", 1)[1] if ":" in call.data else None
+    logger.info(
+        f"User {call.from_user.id} started video form for hero {hero_id}",
+        extra={"service": "video_greeting"},
+    )
+    await _start_video_form(
+        call,
+        state,
+        call.from_user.username,
+        call.from_user.full_name,
+        initial_data={"hero_id": hero_id} if hero_id else None,
+    )
+    await call.answer()
+
+
+async def _start_video_form(
+    event: Message | CallbackQuery,
+    state: FSMContext,
+    username: str = None,
+    full_name: str = None,
+    initial_data: dict | None = None,
+):
     chat_id = event.message.chat.id if isinstance(event, CallbackQuery) else event.chat.id
     await user_service.create_user(chat_id=chat_id, username=username, full_name=full_name or "")
-    await start_form(event=event, state=state, form_path=VIDEO_GREETING_FORM_PATH)
+    await start_form(
+        event=event,
+        state=state,
+        form_path=VIDEO_GREETING_FORM_PATH,
+        initial_data=initial_data,
+    )
 
 
 async def start_video_greeting_form(

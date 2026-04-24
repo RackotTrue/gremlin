@@ -17,3 +17,52 @@ heroes:
     display_name: "Гремлин 👾"
     image_url: "https://v3b.fal.media/files/b/0a967ed1/K8tewXG6yGrnNVIl9duSn_mascot_gremlin.png"
     description: "Маскот-гремлин, который поздравляет ребёнка"
+
+  tent_house:
+    id: tent_house
+    name: "Палатка-Домик"
+    display_name: "Палатка «Домик» 🏠"
+    image_url: "https://v3b.fal.media/files/b/0a967ecd/Jo3M0iCV0NR1KeSxomLIX_1%20-%20312092267.png"
+    description: "Уютный домик, который поздравляет ребёнка"
+
+  tent_3in1:
+    id: tent_3in1
+    name: "Палатка 3 в 1"
+    display_name: "Палатка «3 в 1» ⛺"
+    image_url: "https://v3b.fal.media/files/b/0a967ecd/jGCwDHySnXsgvn1ThYmTz_2%20-%2058452308.png"
+    description: "Весёлая палатка «3 в 1», которая поздравляет ребёнка"
+
+  tent_shater:
+    id: tent_shater
+    name: "Палатка-Шатёр"
+    display_name: "Палатка «Шатёр» 🏕"
+    image_url: "https://v3b.fal.media/files/b/0a967ece/axLnDq-c4lt4ZDuF6bz03_3%20-%20424774838.png"
+    description: "Просторный шатёр, который поздравляет ребёнка"
+
+  constructor:
+    id: constructor
+    name: "Конструктор"
+    display_name: "Конструктор 🧱"
+    image_url: "https://v3b.fal.media/files/b/0a967ece/qOKXVwqhE146u9hK4_vj3_4%20-%20336435693.png"
+    description: "Конструктор, который поздравляет ребёнка"
+
+  box_trainer:
+    id: box_trainer
+    name: "Тренажёр для бокса"
+    display_name: "Тренажёр для бокса 🥊"
+    image_url: "https://v3b.fal.media/files/b/0a967ecf/Olf3p3d-z99eqivyhG3KL_5%20-%20758048932.png"
+    description: "Боксёрский тренажёр, который поздравляет ребёнка"
+
+  night_light:
+    id: night_light
+    name: "Ночник"
+    display_name: "Ночник 💡"
+    image_url: "https://v3b.fal.media/files/b/0a967ecf/67Wvh0uwma6HnnDixR5GP_6%20-%20492884902%20.png"
+    description: "Тёплый ночник, который поздравляет ребёнка"
+
+  toy_car:
+    id: toy_car
+    name: "Машинка"
+    display_name: "Машинка 🚗"
+    image_url: "https://v3b.fal.media/files/b/0a967ed0/Gu47Ilxk52CuO-pah9GjE_7%20-%20349664142%20.png"
+    description: "Машинка, которая поздравляет ребёнка"

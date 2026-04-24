@@ -4,6 +4,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMar
 
 from main.enum.guarantee_enum import GuaranteeTypeEnum
 from main.enum.main_menu_enum import MainMenuButtonEnum
+from main.enum.product_enum import ProductEnum
 from main.enum.user_enum import CheckUserDataButton, UpdateUserDataButton, OrderSourceEnum, ConsentButton
 from aiogram.filters.callback_data import CallbackData
 
@@ -26,6 +27,33 @@ order_source_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text=OrderSourceEnum.AVITO.value, callback_data="order_source_avito")],
     [InlineKeyboardButton(text=OrderSourceEnum.RETAIL.value, callback_data="order_source_retail")]
 ])
+
+
+# Клавиатура выбора купленного товара
+# Префикс callback_data — "product_", значение — product_id из ProductEnum
+product_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text=product.display_name, callback_data=f"product_{product.product_id}")]
+    for product in ProductEnum
+])
+
+
+def get_video_greeting_launch_keyboard(product_id: str) -> InlineKeyboardMarkup:
+    """
+    Клавиатура с кнопкой запуска видео-открытки для выбранного товара.
+
+    :param product_id: id товара (и одновременно id героя в heroes.yml)
+    :return: Клавиатура с двумя кнопками: «Оживить героя» и «Позже»
+    """
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🎬 Оживить героя для ребёнка",
+            callback_data=f"start_video_greeting_for:{product_id}",
+        )],
+        [InlineKeyboardButton(
+            text="⏰ Позже",
+            callback_data="video_greeting_later",
+        )],
+    ])
 
 
 class UserDataApproveCall(CallbackData, prefix="user_and_device_data_approve"):

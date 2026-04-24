@@ -14,6 +14,7 @@ class RegistrationAndActivateGuaranteeState(StatesGroup):
     set_checking_code = State()
     set_city = State()  # Город/регион
     set_order_source = State()  # Источник заказа
+    set_product = State()  # Выбор купленного товара
     # Данные устройства
     set_serial_number = State()
     set_purchase_date = State()

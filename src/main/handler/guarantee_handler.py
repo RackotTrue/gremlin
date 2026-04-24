@@ -6,10 +6,13 @@ from aiogram import Router, F
 from aiogram.types import FSInputFile
 import os
 
+from pathlib import Path
+
 from main.dto.guarantee_request_dto import GuaranteeCreateBitrix24RequestDTO
 from main.dto.guarantee_response_dto import GuaranteeResponseDTO
 from main.keyboard.guarantee_keyboard import *
 from main.enum.guarantee_enum import GuaranteeInformationEnum, GuaranteeTypeEnum
+from main.enum.product_enum import ProductEnum
 from main.keyboard.main_menu_keyboard import CheckingEmailCall, get_checking_email_keyboard
 from main.middleware.middleware import ChatActionMiddleware
 from main.model.guarantee_base import GuaranteeBase
@@ -622,10 +625,13 @@ async def set_city_and_prepare_to_order_source(message: Message, state: FSMConte
                                     text=f"Произошла непредвиденная ошибка, пожалуйста обратитесь к администратору!")
 
 
+PRODUCTS_IMAGES_DIR = Path(__file__).resolve().parents[2] / "resources" / "products"
+
+
 @router.callback_query(RegistrationAndActivateGuaranteeState.set_order_source, F.data.startswith("order_source_"))
-async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, state: FSMContext):
+async def set_order_source_and_prepare_to_product(call: CallbackQuery, state: FSMContext):
     """
-    Метод принимает источник заказа, создает устройство, сохраняет данные пользователя и автоматически создает гарантию
+    Метод принимает источник заказа и запрашивает у покупателя, какой товар он купил.
 
     :param call: CallbackQuery
     :param state: Состояние
@@ -641,13 +647,51 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
         }
 
         order_source = source_map.get(call.data, "Неизвестно")
-        state_dict = await state.get_data()
-        state_dict["set_order_source"] = order_source
+        await state.update_data(set_order_source=order_source)
 
-        # Создаем устройство без серийного номера и даты покупки
+        await delete_previous_message_and_send_new_from_call(
+            call=call,
+            text=(
+                "🎁 *Какой товар вы купили?*\n\n"
+                "Выберите ваш товар — и мы подготовим для вашего ребёнка"
+                " персональное поздравление от героя этой игрушки."
+            ),
+            keyboard=product_keyboard,
+        )
+
+        await state.set_state(RegistrationAndActivateGuaranteeState.set_product)
+
+    except Exception as e:
+        logger.error(f"Произошла ошибка: {e}", extra={"service": "guarantee_handler"})
+        await send_message_from_call(
+            call=call,
+            text="Произошла непредвиденная ошибка, пожалуйста обратитесь к администратору!",
+        )
+
+
+@router.callback_query(RegistrationAndActivateGuaranteeState.set_product, F.data.startswith("product_"))
+async def set_product_and_finalize(call: CallbackQuery, state: FSMContext):
+    """
+    Метод принимает выбранный товар, создает устройство и гарантию,
+    отправляет PDF-сертификат, фото выбранного товара и кнопку запуска
+    видео-открытки с этим героем.
+
+    :param call: CallbackQuery
+    :param state: Состояние
+    """
+
+    try:
+        product_id = call.data.replace("product_", "", 1)
+        product = ProductEnum.from_id(product_id)
+        if product is None:
+            await call.answer("Неизвестный товар. Выберите из списка.", show_alert=True)
+            return
+
+        state_dict = await state.get_data()
+        order_source = state_dict.get("set_order_source", "Неизвестно")
+
         device = await device_service.create_device_simple(serial_number=None, user_id=call.from_user.id)
 
-        # Обновляем информацию по пользователю
         user = await user_service.get_user(call.message.chat.id)
         user.name = state_dict["set_name"]
         user.surname = state_dict["set_surname"]
@@ -660,79 +704,103 @@ async def set_order_source_and_prepare_to_serial_number(call: CallbackQuery, sta
 
         await state.clear()
 
-        # Отправляем сообщение с благодарностью и важной информацией
         await send_message_from_call(
             call=call,
-            text=("Благодарим Вас за покупку и регистрацию гарантии, высылаем вам памятку с основными правилами.\n\n"
-                  "⚠️ *Важно!* Если при монтаже шины на диск есть подозрение на заводской брак "
-                  "(например, шина не балансируется или имеет ярко выраженное отклонение от оси вращения), "
-                  "рекомендуем не эксплуатировать такую шину и сразу обратиться к нам в этом чате — "
-                  "это упростит и ускорит процедуру возврата денежных средств."),
+            text=(
+                f"Отличный выбор — *{product.display_name}*!\n\n"
+                "Благодарим Вас за покупку и регистрацию гарантии,"
+                " высылаем вам памятку с основными правилами."
+            ),
         )
 
-        # Автоматически создаем стандартную гарантию без выбора типа
         guarantee_base = GuaranteeBase()
         await guarantee_base.enrich_from_inline_keyboard(
             device_id=device.id,
-            guarantee_type="standard",  # Автоматически стандартная гарантия
-            guarantee_standard_price=0  # Цена по умолчанию
+            guarantee_type="standard",
+            guarantee_standard_price=0,
         )
-        
-        # Проверяем, что устройства еще не было ни одного гарантийного плана "Стандарт"
+
         device_with_guarantees = await device_service.get_device_with_guarantee(device.id)
         if not all(g.guarantee_type != GuaranteeTypeEnum.STANDARD for g in device_with_guarantees.guarantees):
-            await send_message_from_call(call=call,
-                                        text="У вас уже есть стандартная гарантия на это устройство.")
+            await send_message_from_call(
+                call=call,
+                text="У вас уже есть стандартная гарантия на это устройство.",
+            )
             return
-        
-        # Сохраняем гарантийный план в БД
+
         guarantee = await guarantee_service.create_guarantee_with_period(guarantee_base, device_with_guarantees)
-        
+
         guarantee_create_bitrix24_dto = GuaranteeCreateBitrix24RequestDTO(guarantee, device_with_guarantees, user)
         guarantee_dto = GuaranteeResponseDTO(guarantee, device_with_guarantees)
-        
-        # Создаем Сделку в Битрикс24
+
         await guarantee_service.create_guarantee_deal_in_bitrix24(guarantee_create_bitrix24_dto)
-        
-        # Генерируем и отправляем PDF сертификат и памятку
+
         pdf_path = None
-        memo_path = None
         try:
             pdf_path = generate_certificate_pdf(user=user, device=device_with_guarantees, guarantee=guarantee)
             await bot.send_document(
                 call.message.chat.id,
                 FSInputFile(pdf_path),
-                caption="Цифровой гарантийный сертификат"
+                caption="Цифровой гарантийный сертификат",
             )
-            
-            # Отправляем памятку (опционально - если файл существует)
-            # Раскомментируйте и укажите путь к вашей памятке:
-            # from pathlib import Path
-            # memo_path = Path(__file__).resolve().parents[2] / "resources" / "memo.pdf"
-            # if memo_path.exists():
-            #     await bot.send_document(
-            #         call.message.chat.id,
-            #         FSInputFile(str(memo_path)),
-            #         caption="Памятка по гарантии"
-            #     )
         except Exception as e:
             logger.error(f"Ошибка при отправке PDF: {e}", extra={"service": "guarantee_handler"})
         finally:
             if pdf_path and os.path.exists(pdf_path):
                 os.remove(pdf_path)
-        
-        # Благодарность с информацией о гарантии
+
         await send_message_from_call(
             call=call,
-            text="✅ Спасибо за активацию гарантии!\n\n" + await guarantee_dto.get_guarantee_text()
+            text="✅ Спасибо за активацию гарантии!\n\n" + await guarantee_dto.get_guarantee_text(),
         )
+
+        await _send_product_greeting_offer(call=call, product=product)
 
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}", extra={"service": "guarantee_handler"})
-        await send_message_from_call(call=call,
-                                    text=f"Произошла непредвиденная ошибка, пожалуйста обратитесь к администратору!")
+        await send_message_from_call(
+            call=call,
+            text="Произошла непредвиденная ошибка, пожалуйста обратитесь к администратору!",
+        )
 
-# Обработчики серийного номера и даты покупки для регистрации удалены - эти поля больше не запрашиваются
+
+async def _send_product_greeting_offer(call: CallbackQuery, product: ProductEnum):
+    """
+    Отправить пользователю фото выбранного товара и кнопку для запуска
+    бесплатной видео-открытки, в которой этот герой оживёт и поздравит ребёнка.
+    """
+    image_path = PRODUCTS_IMAGES_DIR / product.image_filename
+    caption = (
+        f"🎁 Это поздравление для вашего ребёнка — *{product.display_name}*!\n\n"
+        "Нажмите кнопку ниже, и герой оживёт, назовёт ребёнка по имени"
+        " и скажет для него пару тёплых слов."
+    )
+    keyboard = get_video_greeting_launch_keyboard(product_id=product.product_id)
+
+    if image_path.exists():
+        await bot.send_photo(
+            chat_id=call.message.chat.id,
+            photo=FSInputFile(str(image_path)),
+            caption=caption,
+            parse_mode="Markdown",
+            reply_markup=keyboard,
+        )
+    else:
+        logger.error(
+            f"Картинка товара не найдена: {image_path}",
+            extra={"service": "guarantee_handler"},
+        )
+        await send_message_from_call(
+            call=call,
+            text=caption,
+            keyboard=keyboard,
+        )
+
+
+@router.callback_query(F.data == "video_greeting_later")
+async def video_greeting_later(call: CallbackQuery):
+    """Пользователь выбрал создать видео-открытку позже."""
+    await call.answer("Хорошо, вы всегда сможете создать видео-открытку командой /video 🎬", show_alert=True)
 
 
 ###
